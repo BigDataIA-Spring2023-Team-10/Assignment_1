@@ -4,9 +4,18 @@ import logging
 from dotenv import load_dotenv
 import csv
 from csv import writer
-
+import sqlite3
 
 load_dotenv() #loads all environment variables from .env file 
+
+
+conn = sqlite3.connect('src\data\ymhsRad.db')
+c = conn.cursor()
+c.execute('''DROP TABLE IF EXISTS nexradmeta''')
+c.execute('''CREATE TABLE nexradmeta
+                   (year INTEGER, month INTEGER, hour INTEGER, stationcode TEXT)''')
+
+
 
 #establishing connection to s3 using boto3
 s3client = boto3.client('s3',
@@ -23,5 +32,7 @@ for page in pages:
         # print(content.get("Key"))
         val = content.get("Key").split("/")
         data_str = val[0:4]
-        print(data_str)
+        # print(data_str)
+        
+        c.execute("INSERT INTO nexradmeta (year, month, hour, stationcode) VALUES (?,?,?,?)", (val[0], val[1], val[2], val[3]))
         
