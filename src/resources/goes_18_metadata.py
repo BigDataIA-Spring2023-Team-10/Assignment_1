@@ -5,18 +5,22 @@ from dotenv import load_dotenv
 import csv
 from csv import writer
 import sqlite3
+import pandas as pd
+
 
 load_dotenv() #loads all environment variables from .env file 
 
-
+#DB connection
 conn = sqlite3.connect('src/data/GEOSPATIAL_DATA.db')
 c = conn.cursor()
-c.execute('''DROP TABLE IF EXISTS nexradmeta''')
-c.execute('''CREATE TABLE nexradmeta
-                   (year INTEGER, month INTEGER, hour INTEGER, stationcode TEXT)''')
+c.execute('''DROP TABLE IF EXISTS goes18meta''')
+c.execute('''CREATE TABLE goes18meta
+                   (year INTEGER, month INTEGER, hour INTEGER)''')
 
+
+# #establishing connection to s3 using boto3
 s3client = boto3.client('s3',region_name='us-east-1')
-bucket = "noaa-nexrad-level2"
+bucket = "noaa-goes18"
 def get_folders(bucket, prefix):
     result = s3client.list_objects(Bucket=bucket, Prefix=prefix, Delimiter='/')
     if "CommonPrefixes" in result:
@@ -31,10 +35,12 @@ def scrape_data(bucket,prefix):
             scrape_data(bucket,name_folder)
             if len(get_folders(bucket,name_folder)) == 0:
                 val=folder.split('//')[1].split('/')
-                c.execute("INSERT INTO nexradmeta (year, month, hour, stationcode) VALUES (?,?,?,?)", (val[0], val[1], val[2], val[3]))
-                print(val)
+                c.execute("INSERT INTO goes18meta (year, month, hour) VALUES (?,?,?)", (val[1], val[2], val[3]))
+                print(val[1],val[2],val[3])
 
 
-bucket_level=get_folders(bucket=bucket,prefix="")
-for folder in bucket_level:
-    scrape_data(bucket=bucket,prefix=folder[1:])
+scrape_data(bucket=bucket,prefix="ABI-L1b-RadC/")
+conn.commit()
+conn.close()
+
+
