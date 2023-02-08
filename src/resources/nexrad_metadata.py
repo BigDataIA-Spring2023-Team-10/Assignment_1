@@ -9,7 +9,7 @@ import sqlite3
 load_dotenv() #loads all environment variables from .env file 
 
 
-conn = sqlite3.connect('src\data\ymhsRad.db')
+conn = sqlite3.connect('src/data/GEOSPATIAL_DATA.db')
 c = conn.cursor()
 c.execute('''DROP TABLE IF EXISTS nexradmeta''')
 c.execute('''CREATE TABLE nexradmeta

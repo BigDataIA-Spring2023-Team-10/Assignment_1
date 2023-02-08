@@ -9,11 +9,11 @@ import sqlite3
 load_dotenv() #loads all environment variables from .env file 
 
 #DB connection
-conn = sqlite3.connect('src\data\ymhDB.db')
+conn = sqlite3.connect('src/data/GEOSPATIAL_DATA.db')
 c = conn.cursor()
-c.execute('''DROP TABLE IF EXISTS nexradmeta''')
-c.execute('''CREATE TABLE nexradmeta
-                   (year INTEGER, month INTEGER, hour INTEGER, stationcode TEXT)''')
+c.execute('''DROP TABLE IF EXISTS goes18meta''')
+c.execute('''CREATE TABLE goes18meta
+                   (year INTEGER, month INTEGER, hour INTEGER)''')
 
 
 #establishing connection to s3 using boto3
