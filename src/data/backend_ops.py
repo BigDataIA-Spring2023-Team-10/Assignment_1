@@ -178,7 +178,16 @@ def getCloudwatchInstance(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY):
     )
     return cloudwatch
 
-def create_steamlit_logs(cloudwatch, msg, LOG_GROUP_NAME, LOG_STREAMLIT_NAME):
+def create_steamlit_logs(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+                          msg, LOG_GROUP_NAME, LOG_STREAMLIT_NAME):
+    
+    # try:
+    cloudwatch = boto3.client('logs', 
+        aws_access_key_id = AWS_ACCESS_KEY_ID,
+        aws_secret_access_key = AWS_SECRET_ACCESS_KEY,
+        region_name='us-east-1'
+    )
+
     cloudwatch.put_log_events(
         logGroupName= LOG_GROUP_NAME,
         logStreamName= LOG_STREAMLIT_NAME,
@@ -189,3 +198,7 @@ def create_steamlit_logs(cloudwatch, msg, LOG_GROUP_NAME, LOG_STREAMLIT_NAME):
                 },
             ]
     )
+    
+    # except:
+    #     print("Issue with connecting to AWS")
+    #     return False

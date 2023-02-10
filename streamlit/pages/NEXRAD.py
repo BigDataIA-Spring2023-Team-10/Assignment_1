@@ -18,6 +18,8 @@ spec_ops.loader.exec_module(ops)
 
 AWS_ACCESS_KEY_ID = st.secrets["AWS_ACCESS_KEY_ID"]
 AWS_SECRET_ACCESS_KEY = st.secrets["AWS_SECRET_ACCESS_KEY"]
+LOG_GROUP_NAME = st.secrets["LOG_GROUP_NAME"]
+LOG_STREAMLIT_NAME= st.secrets["LOG_STREAMLIT_NAME"]
 
 st.title('NEXRAD')
 st.subheader('Search by Fields')
@@ -72,7 +74,10 @@ st.button('Search', on_click = handleSearch)
 selectedFile = ""
 
 if st.session_state['search_btn_clicked']:
-
+    ops.create_steamlit_logs(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+                                    f"NEXRAD:: Search Query: {selectedYear}, {selectedMonth}, {selectedDay}, {selectedSite}",
+                                    LOG_GROUP_NAME,
+                                    LOG_STREAMLIT_NAME)
     selectedFile = st.selectbox("Files", ops.nexrad_query_files(selectedYear, selectedMonth, selectedDay, selectedSite))
 
     st.write(selectedFile)
@@ -81,11 +86,29 @@ if st.session_state['search_btn_clicked']:
 
 if st.session_state['search_generate_link']:
     
-    ops.copyFileFromNexradToS3(selectedFile, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+    try:
+        nexrad_file_status =  ops.copyFileFromNexradToS3(selectedFile, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
 
-    st.write("AWS link")
+        if nexrad_file_status:
+            st.write("AWS link")
 
-    st.write("https://damg7245-s3-storage.s3.amazonaws.com/" + selectedFile)
+            st.write("https://damg7245-s3-storage.s3.amazonaws.com/" + selectedFile)
+            ops.create_steamlit_logs(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+                                    f"NEXRAD:: AWS S3 link for file: https://damg7245-s3-storage.s3.amazonaws.com/{selectedFile}",
+                                    LOG_GROUP_NAME,
+                                    LOG_STREAMLIT_NAME)
+            
+        else:
+            ops.create_steamlit_logs(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+                                    f"NEXRAD:: Files not downloaded from AWS S3 bucket",
+                                    LOG_GROUP_NAME,
+                                    LOG_STREAMLIT_NAME)
+    except:
+        ops.create_steamlit_logs(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+                                    f"NEXRAD:: issue with files download and moving it to S3 bucket",
+                                    LOG_GROUP_NAME,
+                                    LOG_STREAMLIT_NAME)
+
 
 #    Search By File Name
 
@@ -112,23 +135,39 @@ def handleSearchedFileName():
 
         if re.match(pattern, st.session_state['nex-file-searched']):
             st.session_state['nex-file-name-check'] = True
+            ops.create_steamlit_logs(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+                                    f"NEXRAD:: File searched: {st.session_state['nex-file-searched']}",
+                                    LOG_GROUP_NAME,
+                                    LOG_STREAMLIT_NAME)
             aws_file_link = ops.get_nexrad_file_link(st.session_state['nex-file-searched'], AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
             print("AWS FIle Link", aws_file_link)
             if aws_file_link:
                 prefix = "https://damg7245-s3-storage.s3.amazonaws.com/"
                 st.session_state['nex-file-link-generated'] = prefix + aws_file_link
                 st.session_state['nex-filename-search']= ""
+                ops.create_steamlit_logs(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+                                    f"NEXRAD::AWS S3 Link for the file searched: {st.session_state['nex-file-link-generated']}",
+                                    LOG_GROUP_NAME,
+                                    LOG_STREAMLIT_NAME)
             else:
                 st.error('No such file exists!', icon = "⚠️")
                 st.session_state['nex-file-searched']= ""
                 st.session_state['nex-filename-search']= ""
                 st.session_state['nex-file-link-generated'] = ""
+                ops.create_steamlit_logs(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+                                    f"NEXRAD:: Search Query Results: No such file exists!",
+                                    LOG_GROUP_NAME,
+                                    LOG_STREAMLIT_NAME)
         else:
             # print(re.match(pattern, st.session_state['file-searched']) )
             st.error('Provide proper file name', icon = "⚠️")
             st.session_state['nex-file-searched']= ""
             st.session_state['nex-filename-search']= ""
             st.session_state['nex-file-link-generated'] = ""
+            ops.create_steamlit_logs(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+                                    f"NEXRAD:: Search Query Results: Incorrect file name!",
+                                    LOG_GROUP_NAME,
+                                    LOG_STREAMLIT_NAME)
 
 
         
