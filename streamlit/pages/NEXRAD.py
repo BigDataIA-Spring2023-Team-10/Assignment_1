@@ -1,6 +1,7 @@
 import streamlit as st
 import importlib.util
 import os
+import re
 
 current_directory = os.getcwd()
 
@@ -88,19 +89,76 @@ if st.session_state['search_generate_link']:
 
 #    Search By File Name
 
+### Search by Filename
 
 st.subheader("Search By File Name")
 
-searchedFilename = st.text_input("Filename")
+searchedFilename = st.text_input("Filename", key="filename-search")
 
-def handleSearchedFilename():
-    prefix_filename = ops.get_nexrad_file_link(searchedFilename, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-    if prefix_filename:
-        st.session_state['nexrad_prefix_filename'] = prefix_filename
+if 'nex-file-searched' not in st.session_state:
+    st.session_state['nex-file-searched'] = False
 
-st.button("Generate Link", on_click = handleSearchedFilename, key = "search_gen_link")
+if 'nex-file-name-check' not in st.session_state:
+    st.session_state['nex-file-name-check'] = False
 
-st.write("AWS S3 Bucket link")
+if 'nex-file-link-generated' not in st.session_state:
+    st.session_state['nex-file-link-generated'] = False
 
-if st.session_state['nexrad_prefix_filename']:
-    st.write("https://damg7245-s3-storage.s3.amazonaws.com/" + st.session_state['nexrad_prefix_filename'])
+def handleSearchedFileName():
+    # print('************89898******************')
+    print(st.session_state['nex-file-searched'])
+    if st.session_state['nex-file-searched']:
+        pattern = r'^[A-Z]{4}\d{8}_\d{6}(?:_MDM)?_V\d{2}'
+
+        if re.match(pattern, st.session_state['nex-file-searched']):
+            st.session_state['nex-file-name-check'] = True
+            aws_file_link = ops.get_nexrad_file_link(st.session_state['nex-file-searched'], AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+            # print("AWS FIle Link", aws_file_link)
+            if aws_file_link:
+                prefix = "https://damg7245-s3-storage.s3.amazonaws.com/"
+                st.session_state['nex-file-link-generated'] = prefix + aws_file_link
+                st.session_state['nex-filename-search']= ""
+            else:
+                st.error('No such file exists!', icon = "⚠️")
+                st.session_state['nex-file-searched']= ""
+                st.session_state['nex-filename-search']= ""
+                st.session_state['nex-file-link-generated'] = ""
+        else:
+            # print(re.match(pattern, st.session_state['file-searched']) )
+            st.error('Provide proper file name', icon = "⚠️")
+            st.session_state['nex-file-searched']= ""
+            st.session_state['nex-filename-search']= ""
+            st.session_state['nex-file-link-generated'] = ""
+
+
+        
+
+if not searchedFilename == "":
+    st.session_state['nex-file-searched'] = searchedFilename
+    st.button("Generate File Link", on_click = handleSearchedFileName)
+
+
+if st.session_state['nex-file-name-check']:
+    st.write("File name")
+    st.write(st.session_state['nex-file-searched'])
+
+if st.session_state['nex-file-link-generated']:
+    st.write(st.session_state['nex-file-link-generated'])
+
+###########################
+
+# st.subheader("Search By File Name")
+
+# searchedFilename = st.text_input("Filename")
+
+# def handleSearchedFilename():
+#     prefix_filename = ops.get_nexrad_file_link(searchedFilename, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+#     if prefix_filename:
+#         st.session_state['nexrad_prefix_filename'] = prefix_filename
+
+# st.button("Generate Link", on_click = handleSearchedFilename, key = "search_gen_link")
+
+# st.write("AWS S3 Bucket link")
+
+# if st.session_state['nexrad_prefix_filename']:
+#     st.write("https://damg7245-s3-storage.s3.amazonaws.com/" + st.session_state['nexrad_prefix_filename'])

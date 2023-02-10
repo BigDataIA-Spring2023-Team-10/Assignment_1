@@ -30,108 +30,136 @@ def geos_query_files(product, year, day, hour):
 
 
 def downloadFileAndMove(fileName, AWS_ACCESS_KEY_ID ,AWS_SECRET_ACCESS_KEY):
-    print("FileName", fileName)
-    session = boto3.Session(
-        aws_access_key_id = AWS_ACCESS_KEY_ID,
-        aws_secret_access_key = AWS_SECRET_ACCESS_KEY
-    )
-    
-    s3 = session.resource('s3')
+    # print("FileName", fileName)
+    try:
+        session = boto3.Session(
+            aws_access_key_id = AWS_ACCESS_KEY_ID,
+            aws_secret_access_key = AWS_SECRET_ACCESS_KEY
+        )
+        
+        s3 = session.resource('s3')
 
-    copy_source = {
-        'Bucket': "noaa-goes18",
-        'Key': fileName
-    }
+        copy_source = {
+            'Bucket': "noaa-goes18",
+            'Key': fileName
+        }
 
-    bucket = s3.Bucket('damg7245-s3-storage')
-    
-    bucket.copy(copy_source, fileName)
+        bucket = s3.Bucket('damg7245-s3-storage')
+        
+        bucket.copy(copy_source, fileName)
+        return True
+    except:
+        return False
 
 
 def get_geos_file_link(filename, AWS_ACCESS_KEY_ID ,AWS_SECRET_ACCESS_KEY):
 
-    print("get_geos_file_link", filename)
+    # print("get_geos_file_link", filename)
 
-    file = filename.split("_")
+    try:
+        file = filename.split("_")
 
-    # prefix = "https://noaa-goes18.s3.amazonaws.com/"
-    product = '-'.join(file[1].split("-")[:-1]).rstrip(string.digits)
-    year = file[3][1:5]
-    day = file[3][5:8]
-    hour = file[3][8:10]
+        # prefix = "https://noaa-goes18.s3.amazonaws.com/"
+        product = '-'.join(file[1].split("-")[:-1]).rstrip(string.digits)
+        year = file[3][1:5]
+        day = file[3][5:8]
+        hour = file[3][8:10]
 
-    file_prefix =  product + "/" + year + "/" + day + "/" + hour + "/" + filename
+        file_prefix =  product + "/" + year + "/" + day + "/" + hour + "/" + filename
 
-    print("*****************************", file_prefix)
+        # print("*****************************", file_prefix)
 
-    downloadFileAndMove(file_prefix, AWS_ACCESS_KEY_ID ,AWS_SECRET_ACCESS_KEY)
+        goesFileStatus = downloadFileAndMove(file_prefix, AWS_ACCESS_KEY_ID ,AWS_SECRET_ACCESS_KEY)
 
-    return file_prefix
+        if goesFileStatus:
+            return file_prefix
+        return False
+    
+    except:
+        return False
 
 
 ### NEXRAD AWS S3 Utils
 
 def nexrad_query_files(year, month, day, site):
 
-    print(year, month, day, site)
+    # print(year, month, day, site)
 
-    source_bucket_name = "noaa-nexrad-level2"
+    try:
+        source_bucket_name = "noaa-nexrad-level2"
 
-    s3client = boto3.client('s3',
-                        region_name='us-east-1')
+        s3client = boto3.client('s3',
+                            region_name='us-east-1')
 
-    # prefix = product + "/" + str(year) + "/" + str(day) + "/" + str(hour)
-    prefix = str(year) + "/" + str(month) + "/" + str(day) + "/" + str(site)
+        # prefix = product + "/" + str(year) + "/" + str(day) + "/" + str(hour)
+        prefix = str(year) + "/" + str(month) + "/" + str(day) + "/" + str(site)
 
-    print(prefix)
+        print(prefix)
 
-    response = s3client.list_objects_v2(Bucket = source_bucket_name, Prefix = prefix )
-    contents = response.get("Contents")
+        response = s3client.list_objects_v2(Bucket = source_bucket_name, Prefix = prefix )
+        contents = response.get("Contents")
+        
+        files = []
+
+        for content in contents:
+            print(content['Key'])
+            files.append(content['Key'])
+            # files.append(content['Key'].split("/")[-1])
+
+        return files
     
-    files = []
-
-    for content in contents:
-        print(content['Key'])
-        files.append(content['Key'])
-        # files.append(content['Key'].split("/")[-1])
-
-    return files
+    except:
+        print("Bucket or files not found")
 
 
 def copyFileFromNexradToS3(fileName, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY):
     
-    source_bucket_name = "noaa-nexrad-level2"
+    try:
+        source_bucket_name = "noaa-nexrad-level2"
 
-    session = boto3.Session(
-        aws_access_key_id = AWS_ACCESS_KEY_ID,
-        aws_secret_access_key = AWS_SECRET_ACCESS_KEY
-    )
-    
-    s3 = session.resource('s3')
+        session = boto3.Session(
+            aws_access_key_id = AWS_ACCESS_KEY_ID,
+            aws_secret_access_key = AWS_SECRET_ACCESS_KEY
+        )
+        
+        s3 = session.resource('s3')
 
-    copy_source = {
-        'Bucket': source_bucket_name,
-        'Key': fileName
-    }
+        copy_source = {
+            'Bucket': source_bucket_name,
+            'Key': fileName
+        }
 
-    bucket = s3.Bucket('damg7245-s3-storage')
-    
-    bucket.copy(copy_source, fileName)
+        bucket = s3.Bucket('damg7245-s3-storage')
+        
+        bucket.copy(copy_source, fileName)
+
+        return True
+
+    except:
+        print("No such file exists! ", fileName)
+        return False
 
 
 def get_nexrad_file_link(filename, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY):
-    file = filename.split("_")
+    try:
+        file = filename.split("_")
 
-    site = file[0][:4]
-    year = file[0][4:8]
-    month = file[0][8:10]
-    day = file[0][10:12]
+        site = file[0][:4]
+        year = file[0][4:8]
+        month = file[0][8:10]
+        day = file[0][10:12]
 
-    file_prefix =  year + "/" + month + "/" + day + "/" + site + "/" + filename
+        file_prefix =  year + "/" + month + "/" + day + "/" + site + "/" + filename
 
-    copyFileFromNexradToS3(file_prefix, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+        fileStatus = copyFileFromNexradToS3(file_prefix, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
 
-    return file_prefix
+        if fileStatus:
+            return file_prefix
+        
+        return fileStatus
+    
+    except:
+        return False
 
 
 ##### Cloudwatch Logs
