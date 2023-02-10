@@ -1,9 +1,9 @@
 import streamlit as st
+import backend_ops as ops
 
-st.title('Big Data Assignment 1')
 st.title('NEXRAD')
 st.subheader('Search by Fields')
-st.date_input('Date')
+
 
 state = ("NY - New York", "CA - California", "IL - Illionis", "TX - Texas", "AZ - Arizona", "PA - Pennsylvania",
           "AL - Alabama", "AK - Alaska", "AR - Arkansas", "CL - Colorado", "CT - Connecticut", "DE - Delaware",
@@ -71,26 +71,68 @@ state_city_sites = {
     "JP": ["Kadena Air Base, Japan"]
 }
 
+if 'search_btn_clicked' not in st.session_state:
+    st.session_state['search_btn_clicked'] = False
+if 'search_generate_link' not in st.session_state:
+    st.session_state['search_generate_link'] = False
+if 'nexrad_prefix_filename' not in st.session_state:
+    st.session_state['nexrad_prefix_filename'] = False
 
-selectedState = st.selectbox("State", tuple(state_city_sites))
+year, month, day = st.columns(3)
 
-selectedCity = st.selectbox("City", tuple(state_city_sites[selectedState]))
+with year:
+    selectedYear = st.selectbox('Year', ["2018"])
 
-st.button('Search')
+with month:
+    selectedMonth = st.selectbox('Month', ["01", "02", "03", "04", "05"])
 
-st.selectbox("Files", ('file01', 'file02'))
+with day:
+    selectedDay = st.selectbox('Day', ["01", "02", "03", "04", "05", "06", "07"])
 
-st.button("Download")
 
-st.write("AWS S3 Bucket File Link")
+selectedSite = st.selectbox('Site', ["FOP1", "KABR", "KABX", "KAKQ", "KAMA", "KAMX", "KAPX", "KATX"])
+
+def handleSearch():
+    st.session_state['search_btn_clicked'] = True
+
+def handleSearchGenLink():
+    st.session_state['search_generate_link'] = True
+
+st.button('Search', on_click = handleSearch)
+
+selectedFile = ""
+
+if st.session_state['search_btn_clicked']:
+
+    selectedFile = st.selectbox("Files", ops.nexrad_query_files(selectedYear, selectedMonth, selectedDay, selectedSite))
+
+    st.write(selectedFile)
+
+    st.button("Generate Link", on_click = handleSearchGenLink, key = "gen_link")  
+
+if st.session_state['search_generate_link']:
+
+    ops.copyFileFromNexradToS3(selectedFile)
+
+    st.write("AWS link")
+
+    st.write("https://damg7245-s3-storage.s3.amazonaws.com/" + selectedFile)
+
+#    Search By File Name
+
 
 st.subheader("Search By File Name")
 
-st.text_input("Filename")
+searchedFilename = st.text_input("Filename")
 
-st.button("Generate")
+def handleSearchedFilename():
+    prefix_filename = ops.get_nexrad_file_link(searchedFilename)
+    if prefix_filename:
+        st.session_state['nexrad_prefix_filename'] = prefix_filename
+
+st.button("Generate Link", on_click = handleSearchedFilename, key = "search_gen_link")
 
 st.write("AWS S3 Bucket link")
-# st.
 
-# st.selectbox("City", )
+if st.session_state['nexrad_prefix_filename']:
+    st.write("https://damg7245-s3-storage.s3.amazonaws.com/" + st.session_state['nexrad_prefix_filename'])
