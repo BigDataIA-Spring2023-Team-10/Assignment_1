@@ -1,6 +1,21 @@
 import streamlit as st
-import sqlite_main as db_methods
-import backend_ops as ops
+
+import importlib.util
+import os
+
+current_directory = os.getcwd()
+
+module_directory = os.path.abspath(os.path.join(current_directory, 'src', 'data'))
+module_path = os.path.join(module_directory, 'sqlite_main.py')
+ops_path = os.path.join(module_directory, 'backend_ops.py')
+
+spec = importlib.util.spec_from_file_location("sqlite_main", module_path)
+spec_ops = importlib.util.spec_from_file_location("backend_ops", ops_path)
+db_methods = importlib.util.module_from_spec(spec)
+ops = importlib.util.module_from_spec(spec_ops)
+spec.loader.exec_module(db_methods)
+spec_ops.loader.exec_module(ops)
+
 import boto3
 import re
 
@@ -23,12 +38,18 @@ day_list = db_methods.geos_get_day(selectedYear)['day'].values.tolist()
 
 with day:
     selectedDay = st.selectbox("Day", day_list)
+    if selectedDay < 10:
+        selectedDay = "00" + str(selectedDay)
+    elif selectedDay >= 10 and selectedDay < 100:
+        selectedDay = "0" + str(selectedDay)
     # ops.create_steamlit_logs(ops.getCloudwatchInstance(), f"Selected Day {selectedDay}")
 
 hour_list = db_methods.geos_get_hour(selectedYear, selectedDay)['hour'].values.tolist()
 
 with hour:
     selectedHour = st.selectbox("Hour", hour_list)
+    if selectedHour < 10:
+        selectedHour = "0" + str(selectedHour)
     # ops.create_steamlit_logs(ops.getCloudwatchInstance(), f"Selected Hour {selectedHour}")
 
 # files = ["Select search query"]
@@ -58,7 +79,7 @@ st.button("Search", on_click=callback, key = "search")
 
 selectedFile=""
 
-st.session_state
+# st.session_state
 
 if st.session_state['btn_clicked']:
 
