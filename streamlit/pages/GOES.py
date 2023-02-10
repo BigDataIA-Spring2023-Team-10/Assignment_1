@@ -22,7 +22,7 @@ import re
 AWS_ACCESS_KEY_ID = st.secrets["AWS_ACCESS_KEY_ID"]
 AWS_SECRET_ACCESS_KEY = st.secrets["AWS_SECRET_ACCESS_KEY"]
 LOG_GROUP_NAME = st.secrets["LOG_GROUP_NAME"]
-LOG_STREAMLIT_NAME= st.secrets["LOG_STREAMLIT_NAME"],
+LOG_STREAMLIT_NAME= st.secrets["LOG_STREAMLIT_NAME"]
 
 st.title('GOES')
 st.subheader('Search by Fields')
@@ -72,12 +72,15 @@ if 'prefix_filename' not in st.session_state:
 if "searched_filename" not in st.session_state:
     st.session_state["searched_filename"] = False
 
+
+
 def callback():
     st.session_state['btn_clicked'] = True
-    # ops.create_steamlit_logs(ops.getCloudwatchInstance(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY),
-    #                           f"Search Hit {selectedProduct} {selectedYear} {selectedDay} {selectedHour}",
-    #                           LOG_GROUP_NAME,
-    #                           LOG_STREAMLIT_NAME)
+    
+    ops.create_steamlit_logs(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+                              f"Search Hit {selectedProduct} {selectedYear} {selectedDay} {selectedHour}",
+                              LOG_GROUP_NAME,
+                              LOG_STREAMLIT_NAME)
     
 
 def generateLink():
@@ -91,7 +94,7 @@ selectedFile=""
 
 if st.session_state['btn_clicked']:
 
-    print("called here", selectedHour)
+    # print("called here", selectedHour)
 
     selectedFile = st.selectbox("Files", ops.geos_query_files(product[0], selectedYear, selectedDay, selectedHour))
     
@@ -102,10 +105,29 @@ if st.session_state['btn_clicked']:
 
 if st.session_state['generate_link']:
     
-    ops.downloadFileAndMove(selectedFile, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-    st.write("AWS link")
+    try:
+        gen_link_file_status =  ops.downloadFileAndMove(selectedFile, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+    
+        if gen_link_file_status:
+            st.write("AWS link")
 
-    st.write("https://damg7245-s3-storage.s3.amazonaws.com/" + selectedFile)
+            st.write("https://damg7245-s3-storage.s3.amazonaws.com/" + selectedFile)
+            ops.create_steamlit_logs(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+                                    f"AWS S3 Link for the file searched: https://damg7245-s3-storage.s3.amazonaws.com/{selectedFile}",
+                                    LOG_GROUP_NAME,
+                                    LOG_STREAMLIT_NAME)
+        else:
+            ops.create_steamlit_logs(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+                                    f"Files not downloaded from AWS S3 bucket",
+                                    LOG_GROUP_NAME,
+                                    LOG_STREAMLIT_NAME)
+            
+    except:
+        ops.create_steamlit_logs(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+                                    f"issue with files download and moving it to S3 bucket",
+                                    LOG_GROUP_NAME,
+                                    LOG_STREAMLIT_NAME)
+    
 
 
 ### Search by Filename
@@ -131,23 +153,39 @@ def handleSearchedFileName():
 
         if re.match(pattern, st.session_state['file-searched']):
             st.session_state['file-name-check'] = True
+            ops.create_steamlit_logs(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+                                    f"Files searched: {st.session_state['file-searched']}",
+                                    LOG_GROUP_NAME,
+                                    LOG_STREAMLIT_NAME)
             aws_file_link = ops.get_geos_file_link(st.session_state['file-searched'], AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
             # print("AWS FIle Link", aws_file_link)
             if aws_file_link:
                 prefix = "https://damg7245-s3-storage.s3.amazonaws.com/"
                 st.session_state['file-link-generated'] = prefix + aws_file_link
                 st.session_state['filename-search']= ""
+                ops.create_steamlit_logs(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+                                    f"AWS S3 Link for the file searched: {st.session_state['file-link-generated']}",
+                                    LOG_GROUP_NAME,
+                                    LOG_STREAMLIT_NAME)
             else:
                 st.error('No such file exists!', icon = "⚠️")
                 st.session_state['file-searched']= ""
                 st.session_state['filename-search']= ""
                 st.session_state['file-link-generated'] = ""
+                ops.create_steamlit_logs(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+                                    f"Search Query Results: No such file exists!",
+                                    LOG_GROUP_NAME,
+                                    LOG_STREAMLIT_NAME)
         else:
             print(re.match(pattern, st.session_state['file-searched']) )
             st.error('Provide proper file name', icon = "⚠️")
             st.session_state['file-searched']= ""
             st.session_state['filename-search']= ""
             st.session_state['file-link-generated'] = ""
+            ops.create_steamlit_logs(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+                                    f"Search Query Results: Incorrect file name!",
+                                    LOG_GROUP_NAME,
+                                    LOG_STREAMLIT_NAME)
 
 
         
