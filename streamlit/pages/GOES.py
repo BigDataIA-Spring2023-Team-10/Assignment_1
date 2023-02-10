@@ -19,6 +19,11 @@ spec_ops.loader.exec_module(ops)
 import boto3
 import re
 
+AWS_ACCESS_KEY_ID = st.secrets["AWS_ACCESS_KEY_ID"]
+AWS_SECRET_ACCESS_KEY = st.secrets["AWS_SECRET_ACCESS_KEY"]
+LOG_GROUP_NAME = st.secrets["LOG_GROUP_NAME"]
+LOG_STREAMLIT_NAME= st.secrets["LOG_STREAMLIT_NAME"],
+
 st.title('GOES')
 st.subheader('Search by Fields')
 
@@ -69,7 +74,10 @@ if "searched_filename" not in st.session_state:
 
 def callback():
     st.session_state['btn_clicked'] = True
-    ops.create_steamlit_logs(ops.getCloudwatchInstance(), f"Search Hit {selectedProduct} {selectedYear} {selectedDay} {selectedHour}")
+    # ops.create_steamlit_logs(ops.getCloudwatchInstance(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY),
+    #                           f"Search Hit {selectedProduct} {selectedYear} {selectedDay} {selectedHour}",
+    #                           LOG_GROUP_NAME,
+    #                           LOG_STREAMLIT_NAME)
     
 
 def generateLink():
@@ -93,7 +101,8 @@ if st.session_state['btn_clicked']:
     
 
 if st.session_state['generate_link']:
-    ops.downloadFileAndMove(selectedFile)
+    
+    ops.downloadFileAndMove(selectedFile, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
     st.write("AWS link")
 
     st.write("https://damg7245-s3-storage.s3.amazonaws.com/" + selectedFile)
@@ -122,7 +131,7 @@ def handleSearchedFileName():
 
         if re.match(pattern, st.session_state['file-searched']):
             st.session_state['file-name-check'] = True
-            aws_file_link = ops.get_geos_file_link(st.session_state['file-searched'])
+            aws_file_link = ops.get_geos_file_link(st.session_state['file-searched'], AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
             print("AWS FIle Link", aws_file_link)
             if aws_file_link != "":
                 prefix = "https://damg7245-s3-storage.s3.amazonaws.com/"

@@ -15,6 +15,9 @@ ops = importlib.util.module_from_spec(spec_ops)
 spec.loader.exec_module(db_methods)
 spec_ops.loader.exec_module(ops)
 
+AWS_ACCESS_KEY_ID = st.secrets["AWS_ACCESS_KEY_ID"]
+AWS_SECRET_ACCESS_KEY = st.secrets["AWS_SECRET_ACCESS_KEY"]
+
 st.title('NEXRAD')
 st.subheader('Search by Fields')
 
@@ -76,8 +79,8 @@ if st.session_state['search_btn_clicked']:
     st.button("Generate Link", on_click = handleSearchGenLink, key = "gen_link")  
 
 if st.session_state['search_generate_link']:
-
-    ops.copyFileFromNexradToS3(selectedFile)
+    
+    ops.copyFileFromNexradToS3(selectedFile, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
 
     st.write("AWS link")
 
@@ -91,7 +94,7 @@ st.subheader("Search By File Name")
 searchedFilename = st.text_input("Filename")
 
 def handleSearchedFilename():
-    prefix_filename = ops.get_nexrad_file_link(searchedFilename)
+    prefix_filename = ops.get_nexrad_file_link(searchedFilename, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
     if prefix_filename:
         st.session_state['nexrad_prefix_filename'] = prefix_filename
 
