@@ -124,7 +124,7 @@ if 'file-link-generated' not in st.session_state:
     st.session_state['file-link-generated'] = False
 
 def handleSearchedFileName():
-    print('************89898******************')
+    # print('************89898******************')
     print(st.session_state['file-searched'])
     if st.session_state['file-searched']:
         pattern = r"^OR_ABI-L1b-RadC-M6C\d{2}_G\d+_s20\d{12}_e20\d{12}_c20\d{12}\.nc$"
@@ -132,11 +132,16 @@ def handleSearchedFileName():
         if re.match(pattern, st.session_state['file-searched']):
             st.session_state['file-name-check'] = True
             aws_file_link = ops.get_geos_file_link(st.session_state['file-searched'], AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-            print("AWS FIle Link", aws_file_link)
-            if aws_file_link != "":
+            # print("AWS FIle Link", aws_file_link)
+            if aws_file_link:
                 prefix = "https://damg7245-s3-storage.s3.amazonaws.com/"
                 st.session_state['file-link-generated'] = prefix + aws_file_link
                 st.session_state['filename-search']= ""
+            else:
+                st.error('No such file exists!', icon = "⚠️")
+                st.session_state['file-searched']= ""
+                st.session_state['filename-search']= ""
+                st.session_state['file-link-generated'] = ""
         else:
             print(re.match(pattern, st.session_state['file-searched']) )
             st.error('Provide proper file name', icon = "⚠️")
