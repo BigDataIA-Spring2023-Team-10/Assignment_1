@@ -1,0 +1,100 @@
+{
+  "evaluation_parameters": {},
+  "meta": {
+    "active_batch_definition": {
+      "batch_identifiers": {},
+      "data_asset_name": "goes18meta.csv",
+      "data_connector_name": "default_inferred_data_connector_name",
+      "datasource_name": "goes_18_csv"
+    },
+    "batch_markers": {
+      "ge_load_time": "20230210T184959.242909Z",
+      "pandas_data_fingerprint": "0451d838ce324e85aca855f8d3b98fdb"
+    },
+    "batch_spec": {
+      "path": "/Users/anujkumar/Documents/Classes/Big_Data/Assignment_1/great_expectations/data/goes18meta.csv"
+    },
+    "checkpoint_id": null,
+    "checkpoint_name": "goes18meta.csv_goes_18_suite",
+    "expectation_suite_name": "goes_18_suite",
+    "great_expectations_version": "0.15.47",
+    "run_id": {
+      "run_name": null,
+      "run_time": "2023-02-10T13:49:59.235627+00:00"
+    },
+    "validation_id": null,
+    "validation_time": "20230210T184959.251164Z"
+  },
+  "results": [
+    {
+      "exception_info": {
+        "exception_message": null,
+        "exception_traceback": null,
+        "raised_exception": false
+      },
+      "expectation_config": {
+        "expectation_type": "expect_table_row_count_to_be_between",
+        "kwargs": {
+          "batch_id": "2ce32212d1fcb86656598d025178c9b4",
+          "max_value": 4538,
+          "min_value": 4538
+        },
+        "meta": {
+          "profiler_details": {
+            "metric_configuration": {
+              "domain_kwargs": {},
+              "metric_name": "table.row_count",
+              "metric_value_kwargs": null
+            },
+            "num_batches": 1
+          }
+        }
+      },
+      "meta": {},
+      "result": {
+        "observed_value": 4538
+      },
+      "success": true
+    },
+    {
+      "exception_info": {
+        "exception_message": null,
+        "exception_traceback": null,
+        "raised_exception": false
+      },
+      "expectation_config": {
+        "expectation_type": "expect_table_columns_to_match_set",
+        "kwargs": {
+          "batch_id": "2ce32212d1fcb86656598d025178c9b4",
+          "column_set": [
+            "year",
+            "day",
+            "hour"
+          ],
+          "exact_match": null
+        },
+        "meta": {
+          "profiler_details": {
+            "success_ratio": 1.0
+          }
+        }
+      },
+      "meta": {},
+      "result": {
+        "observed_value": [
+          "year",
+          "day",
+          "hour"
+        ]
+      },
+      "success": true
+    }
+  ],
+  "statistics": {
+    "evaluated_expectations": 2,
+    "success_percent": 100.0,
+    "successful_expectations": 2,
+    "unsuccessful_expectations": 0
+  },
+  "success": true
+}
