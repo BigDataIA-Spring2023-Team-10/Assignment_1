@@ -6,6 +6,14 @@
 [![PyPI](https://img.shields.io/pypi/pyversions/locust.svg)](https://pypi.org/project/locust/)
 
 
+
+# Codelabs link
+
+[Code Labs Link](https://bigdataia-spring2023-team-10-assignment-1-streamlithome-t6rxsk.streamlit.app/)
+
+
+
+
 # Application link
 
 [Live Application Page](https://bigdataia-spring2023-team-10-assignment-1-streamlithome-t6rxsk.streamlit.app/) :rocket:
