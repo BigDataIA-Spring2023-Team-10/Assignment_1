@@ -108,12 +108,12 @@ def handleSearchedFileName():
     # print('************89898******************')
     print(st.session_state['nex-file-searched'])
     if st.session_state['nex-file-searched']:
-        pattern = r'^[A-Z]{4}\d{8}_\d{6}(?:_MDM)?_V\d{2}'
+        pattern = r'^[A-Z0-9]{4}\d{8}_\d{6}(?:_MDM)?_V\d{2}'
 
         if re.match(pattern, st.session_state['nex-file-searched']):
             st.session_state['nex-file-name-check'] = True
             aws_file_link = ops.get_nexrad_file_link(st.session_state['nex-file-searched'], AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-            # print("AWS FIle Link", aws_file_link)
+            print("AWS FIle Link", aws_file_link)
             if aws_file_link:
                 prefix = "https://damg7245-s3-storage.s3.amazonaws.com/"
                 st.session_state['nex-file-link-generated'] = prefix + aws_file_link
