@@ -9,7 +9,7 @@
 
 # Codelabs link
 
-[Code Labs Link](https://bigdataia-spring2023-team-10-assignment-1-streamlithome-t6rxsk.streamlit.app/)
+[Code Labs Link](https://codelabs-preview.appspot.com/?file_id=1CodBwcE_d594WHK_9WkbnIY_ODI_2GFQ-ocytE75jfw#0)
 
 
 
